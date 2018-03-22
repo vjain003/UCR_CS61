@@ -1,0 +1,75 @@
+
+
+.ORIG x3000			; Program begins here
+;-------------
+;Instructions
+;-------------
+LD R6, Convert_addr		; R6 <-- Address pointer for Convert
+LDR R1, R6, #0			; R1 <-- VARIABLE Convert 
+;-------------------------------
+;INSERT CODE STARTING FROM HERE
+;--------------------------------
+
+LD R2, COUNTER_1		;FOR 16 NUMS
+LD R3, COUNTER_2		;COUNTS 4 NUMS AND SPACES
+
+FOR_LOOPP			;LOOP
+;  IF_STATEMENT
+      ADD R1, R1, #0		;RELOAD R1
+      BRzp POSITIVE_NUM		;IF R1 (HEX) IS POSITIVE, PUT 0 INTO R0 AND OUTPUT 0
+      BRn NEGATIVE_NUM		;IF R1 (HEX) IS NEGATIVE, PUT 1 INTO R0 AND OUTPUT 1
+
+POSITIVE_NUM			;IF HEX IS POSITIVE, COUT 0 AND ADD R1 TO ITSELF 
+  LD R0, NUM_ZERO
+  OUT
+  ADD R1, R1, R1
+BR OUTPUTT			;BRANCH TO THE OUTPUT LOOP
+
+NEGATIVE_NUM			;IF HEX IS NEGATIVE, COUT 1 AND R1 TO ITSELF
+  LD R0, NUM_ONE
+  OUT
+  ADD R1, R1, R1
+BR OUTPUTT			;GO TO OUTPUT LOOP
+
+OUTPUTT				;OUTPUT LOOP
+  ADD R3, R3, #-1		;DECREASE R3 AND IF + ,COUNT, OTHERWISE, PUT SPACE
+BRp COUNT_NUMS
+BRz SPACE
+
+SPACE				;JUST LOAD SPACE AND COUT IT AFTER 4 NUMS
+  LD R0, NEW_SPACE
+  OUT
+  LD R3, COUNTER_2
+  BR COUNT_NUMS
+
+COUNT_NUMS			;COUNT THE NUMS AND RECURSE IF STILL LEFT
+  ADD R2, R2, #-1
+  BRp FOR_LOOPP
+
+LEA R0, NEW_LINE		;NEW LINE!
+PUTS
+
+HALT
+;---------------	
+;Data
+;---------------
+Convert_addr .FILL xD000	; The address of where to find the data
+
+;JUST THE SPACES, 1S, 0S AND ENDLINES
+
+COUNTER_1	.FILL	#16
+COUNTER_2	.FILL	#4
+NUM_ZERO	.STRINGZ	"0"
+NUM_ONE		.STRINGZ	"1"
+NEW_LINE	.STRINGZ	"\n"
+NEW_SPACE	.STRINGZ	" "
+
+
+
+
+.ORIG xD000			; Remote data
+Convert .FILL xABCD		; <----!!!NUMBER TO BE CONVERTED TO BINARY!!!
+;---------------	
+;END of PROGRAM
+;---------------	
+.END
