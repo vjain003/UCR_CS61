@@ -1,0 +1,360 @@
+
+
+.orig x3000
+    LD R0,   NUM_2_RR
+    JSRR R0			;JUMP TO SUB
+    
+    ADD R1,  R1, #1		;INCREMENT R1
+    LD R0, NEW_LINE		;PUT OUT THE NEW LINE
+    OUT	
+
+    LD R0, PRINT_PTR  		;LOAD THE PTR AND JUMP TO THE SUB
+    JSRR R0
+
+HALT
+
+;data
+
+NEW_LINE .FILL '\n'
+NUM_2_RR .FILL x3200
+PRINT_PTR .FILL x3400
+
+;====
+;SUB
+;====
+
+.orig x3200
+SUB_NUM_2_RR
+    
+    ;store
+;***===============================
+;BACKING UP ALL THE REGISTERS
+    ST R0, R0_3200_BACKUP
+    ST R2, R2_3200_BACKUP
+    ST R3, R3_3200_BACKUP
+    ST R4, R4_3200_BACKUP
+    ST R5, R5_3200_BACKUP
+    ST R6, R6_3200_BACKUP
+    ST R7, R7_3200_BACKUP
+;***===============================
+
+
+    BR BEGIN
+
+    INVALID			;IF INVALID, JUMP BACK TO THE BEGIN LOOP
+    LEA R0, INVALID_MSG
+    PUTS
+
+    BEGIN
+    LEA R0, INTRO
+    PUTS
+
+    LD R2, ARRAY_PTR
+    LD R5,  NUM_FIVE
+    LD R3, MINUS
+    GETC
+    OUT
+;INPUT WILL BE PLUS OR MINUS
+
+
+    NOT R4, R0			;IS R0 -?
+    ADD R4, R4, #1
+    ADD R1, R4, R3
+    BRz IS_MINUS
+	    
+    LD R3, PLUS			;IS R0 +?
+    ADD R1, R4, R3
+    BRz IS_PLUS
+    BR YOUMAY_PROCEED		;NO? THEN YOU MAY PROCEED
+
+    IS_MINUS			;IS MINUS
+        LD R6, MINUS_FLAG
+        GETC
+        OUT
+        BR BEGINLOOP		;NO MATTER WHAT, START THE INTRO
+
+    IS_PLUS			;IS PLUS
+        GETC
+        OUT
+        BR BEGINLOOP		;NO MATTER WHAT, START THE INTRO
+
+    YOUMAY_PROCEED
+        BR BEGINLOOP
+
+    IN_WHILE
+        GETC			;DONT GET THE INPUT BC THE +- IS OUTSIDE THE LOOPS
+        OUT
+
+        BEGINLOOP
+        LD R3, ENTER		;ENTER LOOP
+        NOT R4, R0
+        ADD R4, R4, #1
+        ADD R1, R4, R3
+        BRz ENTERCASE
+
+        LD R4, LIMIT1
+        ADD R3, R0, R4		;IF ITS NOT PUS, MINUS, OR ENTER CHECK
+        BRp INVALID		;IF MORE THAN 9 YA NEGATIVE NUMBER
+        LD R4, LIMIT2
+        ADD R3, R0, R4
+        BRn INVALID
+
+        ;STORING THE STUFF
+        STR R0, R2, #0
+        ADD R2, R2, #1
+        ADD R5, R5, #-1
+    BRp IN_WHILE		;IF POSITIVE, GO TO INNER LOOP
+
+  ENTERCASE
+    LD R0, NUM_ZERO		;PUT THE 0 INTO R0 TO RESET IT
+
+    STR R0, R2, #0		;STORE RR R2 INTO R0
+            
+    LD R5,  NUM_FIVE
+    LD R2,  ARRAY_PTR
+    LD R3,  NUM_ZERO
+
+    LDR R1, R2, #0		;CALCULATING THE STUFF NEEDED FOR THE AHEAD LOOPS
+    ADD R2, R2, #1
+ 
+;ASCII CONVERSION
+    ADD R1, R1, #-12
+    ADD R1, R1, #-12
+    ADD R1, R1, #-12
+    ADD R1, R1, #-12 
+
+    WHILE_LOOPP_CALCULATIONS
+        LDR R4, R2, #0		;LD IN R4
+        ADD R4, R4, #0		;EXIT IF NOT GOOD
+        BRz WHILE_LOOPP_CALCULATIONS_DONE
+        ADD R2, R2, #1
+
+	;ASCII CONVERSION
+	ADD R4, R4, #-12
+        ADD R4, R4, #-12	;CONVERTING ASC TO DEC BY ADDING 12 4x
+        ADD R4, R4, #-12
+        ADD R4, R4, #-12 
+    
+        ADD R1, R1, R1
+        ADD R3, R1, #0		;MULTIPLY BY 10
+        ADD R3, R3, R3
+        ADD R3, R3, R3		;YADDA YADDA LOOK AT THE NOTES YAAR
+
+        ADD R1, R1, R3
+        ADD R1, R4, R1
+        BR WHILE_LOOPP_CALCULATIONS
+    WHILE_LOOPP_CALCULATIONS_DONE
+
+    ADD R6, R6, #0
+    BRp NEGATIVE_MAKER		;IF NEG, 2'S COMPLEMENT
+    BR KEEP
+
+    NEGATIVE_MAKER
+        NOT R1, R1		;2'S COMPLEMENTING
+        ADD R1, R1, #1
+    KEEP
+
+;***===============================
+;BACKING UP ALL THE REGISTERS
+    LD R0, R0_3200_BACKUP
+    LD R2, R2_3200_BACKUP
+    LD R3, R3_3200_BACKUP
+    LD R4, R4_3200_BACKUP
+    LD R5, R5_3200_BACKUP
+    LD R6, R6_3200_BACKUP
+    LD R7, R7_3200_BACKUP
+;***===============================
+
+    RET
+
+;=====
+;DATA
+;======
+
+;***===============================
+;BACKING UP ALL THE REGISTERS
+R0_3200_BACKUP .BLKW #1	
+R1_3200_BACKUP .BLKW #1
+R2_3200_BACKUP .BLKW #1
+R3_3200_BACKUP .BLKW #1
+R4_3200_BACKUP .BLKW #1
+R5_3200_BACKUP .BLKW #1
+R6_3200_BACKUP .BLKW #1
+R7_3200_BACKUP .BLKW #1
+;***===============================
+
+
+
+ARRAY_PTR 	.FILL x4000
+NUM_FIVE 	.FILL #5
+NUM_ZERO 	.FILL #0
+
+INTRO 		.STRINGZ "Input a 16 bit number: \n"
+INVALID_MSG 	.STRINGZ "Invalid input! Please make sure you are inputting a valid number!\n"
+
+MINUS 		.FILL '-'
+PLUS 		.FILL '+'
+
+MINUS_FLAG 	.FILL #1
+ENTER 		.FILL '\n'
+
+LIMIT1 	.FILL -x3A
+LIMIT2 	.FILL -x2
+
+;============
+;REMOTE DATA
+;============
+.orig x4000
+DATA_ARRAY .BLKW #6
+
+
+;***********************************************
+;SUB
+;***********************************************
+;***********************************************
+;==================
+;NEXT SUB      
+;PRINTS THE NUMBER 
+;==================
+.orig x3400
+SUB_PRINT_NUM
+
+;***===============================
+;BACKING UP ALL THE REGISTERS
+    ST R0, R0_3400_BACKUP
+    ST R1, R1_3400_BACKUP
+    ST R2, R2_3400_BACKUP
+    ST R3, R3_3400_BACKUP
+    ST R4, R4_3400_BACKUP
+    ST R7, R7_3400_BACKUP
+;***===============================
+
+LD R0, NUM_10000
+AND R3, R3, #0
+
+DECR_10000
+    ADD R2, R1, #0	;PUT R1 INTO R2
+    ADD R2, R2, R0	;LEFT SHIFT INTO R2
+    BRn DONE_10000
+
+    ADD R3, R3, #1	;INCREASE R3
+    ADD R1, R2, #0	;PUT R2 INTO R1
+    BR DECR_10000	;BRANCH TO THIS AGAIN
+
+DONE_10000
+    LD R4,  ASCII_TOCHAR	;WHEN DONE PUT THE ASC TO C INTO R4
+    ADD R0, R3, R4		;OUTPUT R3+R4
+    OUT
+
+
+
+
+LD R0, NUM_1000
+AND R3, R3, #0
+
+DECR_1000
+    ADD R2, R1, #0	;PUT R1 INTO R2
+    ADD R2, R2, R0	;LEFT SHIFT INTO R2
+    BRn DONE_1000
+
+    ADD R3, R3, #1	;INCREASE R3
+    ADD R1, R2, #0	;PUT R2 INTO R1
+    BR DECR_1000	;BRANCH TO THIS AGAIN
+
+DONE_1000
+    LD R4,  ASCII_TOCHAR	;WHEN DONE PUT THE ASC TO C INTO R4
+    ADD R0, R3, R4		;OUTPUT R3+R4
+    OUT
+
+
+
+
+LD R0, NUM_100
+AND R3, R3, #0
+
+DECR_100
+    ADD R2, R1, #0	;PUT R1 INTO R2
+    ADD R2, R2, R0	;LEFT SHIFT INTO R2
+    BRn DONE_100
+
+    ADD R3, R3, #1	;INCREASE R3
+    ADD R1, R2, #0	;PUT R2 INTO R1
+    BR DECR_100	;BRANCH TO THIS AGAIN
+
+DONE_100
+    LD R4,  ASCII_TOCHAR	;WHEN DONE PUT THE ASC TO C INTO R4
+    ADD R0, R3, R4		;OUTPUT R3+R4
+    OUT
+
+
+
+
+LD R0, NUM_10
+AND R3, R3, #0
+
+DECR_10
+    ADD R2, R1, #0	;PUT R1 INTO R2
+    ADD R2, R2, R0	;LEFT SHIFT INTO R2
+    BRn DONE_10
+
+    ADD R3, R3, #1	;INCREASE R3
+    ADD R1, R2, #0	;PUT R2 INTO R1
+    BR DECR_10	;BRANCH TO THIS AGAIN
+
+DONE_10
+    LD R4,  ASCII_TOCHAR	;WHEN DONE PUT THE ASC TO C INTO R4
+    ADD R0, R3, R4		;OUTPUT R3+R4
+    OUT
+
+
+
+
+LD R0, NUM_1
+AND R3, R3, #0
+
+DECR_1
+    ADD R2, R1, #0	;PUT R1 INTO R2
+    ADD R2, R2, R0	;LEFT SHIFT INTO R2
+    BRn DONE_1
+
+    ADD R3, R3, #1	;INCREASE R3
+    ADD R1, R2, #0	;PUT R2 INTO R1
+    BR DECR_1	;BRANCH TO THIS AGAIN
+
+DONE_1
+    LD R4,  ASCII_TOCHAR	;WHEN DONE PUT THE ASC TO C INTO R4
+    ADD R0, R3, R4		;OUTPUT R3+R4
+    OUT
+
+;***===============================
+;BACKING UP ALL THE REGISTERS
+    LD R0, R0_3400_BACKUP
+    LD R1, R1_3400_BACKUP
+    LD R2, R2_3400_BACKUP
+    LD R3, R3_3400_BACKUP
+    LD R4, R4_3400_BACKUP
+    LD R7, R7_3400_BACKUP
+;***===============================
+RET
+
+;***===============================
+;BACKING UP ALL THE REGISTERS
+R0_3400_BACKUP .BLKW #1
+R1_3400_BACKUP .BLKW #1
+R2_3400_BACKUP .BLKW #1
+R3_3400_BACKUP .BLKW #1
+R4_3400_BACKUP .BLKW #1
+R7_3400_BACKUP .BLKW #1
+;***===============================
+
+;=========
+;SUB DATA
+;=========
+ASCII_TOCHAR 	.FILL x30		;THE ASCII VAL FOR 48
+NUM_10000 	.FILL #-10000
+NUM_1000 	.FILL #-1000
+NUM_100 	.FILL #-100
+NUM_10 		.FILL #-10
+NUM_1 		.FILL #-1
+
+.END

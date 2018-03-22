@@ -1,0 +1,62 @@
+
+
+.orig x3000
+
+
+LEA R0, INTRO		;INTRO MESSAGE
+PUTS
+
+;=============
+;Instructions
+;=============
+LD R6, NUM_ZERO		;RESET R6, R1
+LD R1, NUM_ZERO
+GETC			;GET THE CHAR
+OUT
+LD R1, NUM_ZERO
+ADD R1, R0, #0
+
+  LD R2, RESET
+  LD R3, NUM_EIGHT
+
+WHILE_LOOPP		;LOOPING 16 TIMES
+  AND R4, R1, R2
+  BRz IS_ZERO
+  BRnp ONE
+  IS_ZERO:
+ADD R1, R0, R1
+BRnzp NEXT
+  ONE:
+ADD R6, R6, #1
+BRnzp NEXT
+  
+NEXT:
+ADD R1, R0, R1		;SHIT LEFT ONE BIT, REDUCE THAT COUNTER
+ADD R3, R3, #-1		;, AND IF R1>0 THEN REDO THE WHILE LOOPP
+BRp WHILE_LOOPP
+END_WHILE_LOOPP
+
+;OUTPUTTING THE NUMBER OF 1'S
+LEA R0, END
+PUTS
+AND R0, R0, #0
+LD  R0, ZERO
+ADD R0, R0, R6
+OUT
+
+HALT
+	
+    ;----------
+    ;Local data
+    ;----------
+    VAL 		.FILL x6666 ;VAL TO BE CONV
+    RESET 		.FILL x0080
+    ZERO 		.FILL x30  ;ASCII FOR '0'
+    NUM_ZERO 		.FILL #0
+    NUM_EIGHT 		.FILL #8	;FOR WHILE LOOPP
+    INTRO		.STRINGZ "Input a single character\n"
+    END			.STRINGZ "\nThe number of 1 bits is: "
+		
+
+
+.end
